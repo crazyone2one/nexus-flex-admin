@@ -1,0 +1,14 @@
+spring:
+  application:
+    name: nexus-flex-admin
+  profiles:
+    active: dev
+  servlet:
+    # file upload
+    multipart:
+      max-file-size: 1024MB
+      max-request-size: 1024MB
+  # i18n
+  messages:
+    basename: i18n/commons,i18n/dashboard,i18n/project,i18n/system
+    default-locale: zh_CN

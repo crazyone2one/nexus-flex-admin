@@ -1,0 +1,51 @@
+spring:
+  main:
+    lazy-initialization: true
+  datasource:
+    url: jdbc:mysql://127.0.0.1:3306/nexus-flex?useUnicode=true&characterEncoding=utf-8&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Shanghai
+    username: root
+    password: 123456
+    type: com.zaxxer.hikari.HikariDataSource
+    hikari:
+      maximum-pool-size: 100
+      minimum-idle: 10
+      idle-timeout: 300000
+      auto-commit: true
+      pool-name: DatebookHikariCP
+      max-lifetime: 1800000
+      connection-timeout: 30000
+      connection-test-query: SELECT 1
+  # redisson
+  data:
+    redis:
+      timeout: 1800
+      host: localhost
+      port: 6379
+#      password:
+      database: 0
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: '*'
+  endpoint:
+    health:
+      show-details: always
+logging:
+  level:
+    root: warn
+    org.springframework.boot: debug
+# swagger docs config
+springdoc:
+  api-docs:
+    enabled: false
+    groups:
+      enabled: true
+jwt:
+  secret: WW91clN1cGVyTG9uZ1NlY3JldEtleUZvckhTNTEyQWxnb3JpdGhtTXVzdEJlQ2hhbmdlZEluUHJvZA==
+  access-expiration: 3600000  # 1 hour
+  refresh-expiration: 604800000 # 7 days
+mybatis-flex:
+  configuration:
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
