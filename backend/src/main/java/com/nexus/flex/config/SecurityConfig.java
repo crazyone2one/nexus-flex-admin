@@ -1,6 +1,7 @@
 package com.nexus.flex.config;
 
 import com.nexus.flex.security.OptimizedPermissionEvaluator;
+import com.nexus.flex.security.handler.OptimizedAuthenticationEntryPoint;
 import com.nexus.flex.security.service.UserDetailsServiceImpl;
 import com.nexus.flex.security.filter.OptimizedAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
@@ -41,6 +42,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class SecurityConfig {
     private final OptimizedAuthenticationFilter authenticationFilter;
+    private final OptimizedAuthenticationEntryPoint authenticationEntryPoint;
     private final UserDetailsServiceImpl userDetailsService;
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) {
@@ -59,6 +61,7 @@ public class SecurityConfig {
         );
         http.addFilterBefore(authenticationFilter, UsernamePasswordAuthenticationFilter.class);
         http.authenticationManager(authenticationManager());
+        http.exceptionHandling(e -> e.authenticationEntryPoint(authenticationEntryPoint));
         return http.build();
     }
 

@@ -70,7 +70,7 @@ router.beforeEach(async (to, _from, next) => {
             next();
         } else {
             // 不在白名单，重定向到登录页，并带上 redirect 参数
-            next(`/login?redirect=${encodeURIComponent(to.fullPath)}`);
+            next(`/login?redirect=${encodeURIComponent(to.name as string)}`);
         }
     }
 });

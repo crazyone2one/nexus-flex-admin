@@ -1,7 +1,7 @@
 package com.nexus.flex.security.filter;
 
+import com.nexus.flex.security.handler.OptimizedAuthenticationEntryPoint;
 import com.nexus.flex.security.service.UserCacheService;
-import com.nexus.flex.security.service.UserDetailsServiceImpl;
 import com.nexus.flex.security.util.JwtUtil;
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.FilterChain;
@@ -11,13 +11,16 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.NullMarked;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
+import org.springframework.web.servlet.HandlerExceptionResolver;
 
 import java.io.IOException;
 import java.util.Objects;
@@ -32,7 +35,8 @@ import java.util.Objects;
 @RequiredArgsConstructor
 public class OptimizedAuthenticationFilter extends OncePerRequestFilter {
     private final JwtUtil jwtUtil;
-    private final UserDetailsServiceImpl userDetailsService;
+    private final HandlerExceptionResolver handlerExceptionResolver;
+    private final OptimizedAuthenticationEntryPoint authenticationEntryPoint;
     private final UserCacheService userCacheService;
 
     @Override
@@ -41,8 +45,8 @@ public class OptimizedAuthenticationFilter extends OncePerRequestFilter {
         if (StringUtils.hasText(header) && header.startsWith("Bearer ")) {
             String token = header.substring(7);
             try {
+                Claims claims = jwtUtil.parseClaims(token);
                 if (jwtUtil.validateToken(token)) {
-                    Claims claims = jwtUtil.parseClaims(token);
                     String username = claims.getSubject();
                     if (Objects.nonNull(username) && SecurityContextHolder.getContext().getAuthentication() == null) {
                         UserDetails userDetails = userCacheService.loadUserByUsername(username);
@@ -53,11 +57,16 @@ public class OptimizedAuthenticationFilter extends OncePerRequestFilter {
                         SecurityContextHolder.getContext().setAuthentication(authentication);
                     }
                 }
-            } catch (Exception e) {
+            } catch (io.jsonwebtoken.JwtException exception) {
+                // JWT 相关异常应该导致认证失败，而不是服务器错误
+                AuthenticationException authException = new BadCredentialsException("Token is invalid", exception);
+                SecurityContextHolder.clearContext();
+                authenticationEntryPoint.commence(request, response, authException);
+            } catch (Exception exception) {
                 // Token 无效或过期，不设置 SecurityContext，让后续逻辑处理
                 // 可以在 request attribute 中标记过期原因，供全局异常或控制器读取
-                log.error("JWT 验证失败：{}", e.getMessage(), e);
-                request.setAttribute("jwt_error", e.getClass().getSimpleName());
+                log.error("JWT 验证失败：{}", exception.getMessage(), exception);
+                handlerExceptionResolver.resolveException(request, response, null, exception);
             }
         }
         filterChain.doFilter(request, response);

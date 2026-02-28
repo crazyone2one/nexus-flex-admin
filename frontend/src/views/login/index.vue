@@ -17,7 +17,6 @@ const handleLogin = async () => {
   await userStore.login(form.username, form.password)
   await userStore.getUserInfo()
   const {redirect, ...othersQuery} = router.currentRoute.value.query;
-  console.log(redirect)
   await router.push({
     name: redirect as string || 'Dashboard',
     query: {

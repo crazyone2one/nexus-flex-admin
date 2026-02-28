@@ -58,7 +58,8 @@ public class JwtUtil {
                     .getPayload();
         } catch (ExpiredJwtException e) {
             // 即使过期也要返回claims以获取用户信息用于刷新
-            return e.getClaims();
+            // return e.getClaims();
+            throw new JwtException("Invalid or expired token");
         }
     }
 
